@@ -514,10 +514,14 @@ class LyftDataset:
         channel: str = "CAM_FRONT",
         freq: float = 10,
         imsize: Tuple[float, float] = (640, 360),
-        out_path: str = None,
+        out_path: Path = None,
+        interactive: bool = True,
+        verbose: bool = False,
     ) -> None:
         self.explorer.render_scene_channel(
-            scene_token=scene_token, channel=channel, freq=freq, image_size=imsize, out_path=out_path
+            scene_token=scene_token, channel=channel, freq=freq,
+            image_size=imsize, out_path=out_path,
+            interactive=interactive, verbose=verbose,
         )
 
     def render_egoposes_on_map(self, log_location: str, scene_tokens: List = None, out_path: str = None) -> None:
@@ -1252,6 +1256,8 @@ class LyftDatasetExplorer:
         freq: float = 10,
         image_size: Tuple[float, float] = (640, 360),
         out_path: Path = None,
+        interactive: bool = True,
+        verbose: bool = False,
     ) -> None:
         """Renders a full scene for a particular camera channel.
 
@@ -1285,18 +1291,22 @@ class LyftDatasetExplorer:
         sd_rec = self.lyftd.get("sample_data", sample_rec["data"][channel])
 
         # Open CV init
-        name = "{}: {} (Space to pause, ESC to exit)".format(scene_rec["name"], channel)
-        cv2.namedWindow(name)
-        cv2.moveWindow(name, 0, 0)
+        if interactive:
+            name = "{}: {} (Space to pause, ESC to exit)".format(
+                scene_rec["name"], channel)
+            cv2.namedWindow(name)
+            cv2.moveWindow(name, 0, 0)
 
         if out_path is not None:
             fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-            out = cv2.VideoWriter(out_path, fourcc, freq, image_size)
+            out = cv2.VideoWriter(str(out_path), fourcc, freq, image_size)
         else:
             out = None
 
         has_more_frames = True
         while has_more_frames:
+            if verbose:
+                print(sd_rec['token'])
 
             # Get data from DB
             image_path, boxes, camera_intrinsic = self.lyftd.get_sample_data(
@@ -1313,7 +1323,8 @@ class LyftDatasetExplorer:
 
             # Render
             image = cv2.resize(image, image_size)
-            cv2.imshow(name, image)
+            if interactive:
+                cv2.imshow(name, image)
             if out_path is not None:
                 out.write(image)
 
@@ -1330,7 +1341,8 @@ class LyftDatasetExplorer:
             else:
                 has_more_frames = False
 
-        cv2.destroyAllWindows()
+        if interactive:
+            cv2.destroyAllWindows()
         if out_path is not None:
             out.release()
 
