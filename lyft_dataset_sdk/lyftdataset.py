@@ -466,6 +466,7 @@ class LyftDataset:
         pointsensor_channel: str = "LIDAR_TOP",
         camera_channel: str = "CAM_FRONT",
         out_path: str = None,
+        figsize: Tuple[float, float] = (9, 16),
     ) -> None:
         self.explorer.render_pointcloud_in_image(
             sample_token,
@@ -473,6 +474,7 @@ class LyftDataset:
             pointsensor_channel=pointsensor_channel,
             camera_channel=camera_channel,
             out_path=out_path,
+            figsize=figsize,
         )
 
     def render_sample(
@@ -739,6 +741,7 @@ class LyftDatasetExplorer:
         pointsensor_channel: str = "LIDAR_TOP",
         camera_channel: str = "CAM_FRONT",
         out_path: str = None,
+        figsize: Tuple[float, float] = (9, 16),
     ) -> None:
         """Scatter-plots a point-cloud on top of image.
 
@@ -759,7 +762,7 @@ class LyftDatasetExplorer:
         camera_token = sample_record["data"][camera_channel]
 
         points, coloring, im = self.map_pointcloud_to_image(pointsensor_token, camera_token)
-        plt.figure(figsize=(9, 16))
+        plt.figure(figsize=figsize)
         plt.imshow(im)
         plt.scatter(points[0, :], points[1, :], c=coloring, s=dot_size)
         plt.axis("off")
